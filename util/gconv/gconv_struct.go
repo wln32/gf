@@ -168,9 +168,9 @@ func doStruct(
 
 	// Holds the info for subsequent converting.
 	type toBeConvertedFieldInfo struct {
-		TagName    string // Tag name for field tag by priority tags.
-		Value      any    // Found value by tag name or field name from input.
-		FieldIndex int    // The associated reflection field index.
+		Value          any    // Found value by tag name or field name from input.
+		FieldIndex     int    // The associated reflection field index.
+		FieldOrTagName string // Field name or tag name for field tag by priority tags.
 	}
 
 	var (
@@ -212,8 +212,8 @@ func doStruct(
 			// It is only recorded if the name has a fieldTag
 			if fieldTagName != "" {
 				toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
-					TagName:    fieldTagName,
-					FieldIndex: elemFieldType.Index[0],
+					FieldIndex:     elemFieldType.Index[0],
+					FieldOrTagName: fieldTagName,
 				}
 			}
 
@@ -234,8 +234,8 @@ func doStruct(
 				fieldTagName = elemFieldName
 			}
 			toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
-				TagName:    fieldTagName,
-				FieldIndex: elemFieldType.Index[0],
+				FieldIndex:     elemFieldType.Index[0],
+				FieldOrTagName: fieldTagName,
 			}
 		}
 	}
@@ -248,7 +248,7 @@ func doStruct(
 	// Search the parameter value for the field.
 	var paramsValue any
 	for fieldName, fieldInfo := range toBeConvertedFieldNameToInfoMap {
-		if paramsValue, ok = paramsMap[fieldInfo.TagName]; ok {
+		if paramsValue, ok = paramsMap[fieldInfo.FieldOrTagName]; ok {
 			fieldInfo.Value = paramsValue
 			toBeConvertedFieldNameToInfoMap[fieldName] = fieldInfo
 		}
@@ -284,7 +284,7 @@ func doStruct(
 			); err != nil {
 				return err
 			}
-			usedParamsKeyOrTagNameMap[fieldInfo.TagName] = struct{}{}
+			usedParamsKeyOrTagNameMap[fieldInfo.FieldOrTagName] = struct{}{}
 			continue
 		}
 

@@ -33,16 +33,19 @@ func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, e
 		return &txLink{tx.GetSqlTX()}, nil
 	}
 	if master {
+
 		link, err := c.db.GetCore().MasterLink(schema)
 		if err != nil {
 			return nil, err
 		}
 		return link, nil
 	}
+
 	link, err := c.db.GetCore().SlaveLink(schema)
 	if err != nil {
 		return nil, err
 	}
+
 	return link, nil
 }
 

@@ -183,6 +183,7 @@ func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string,
 	if err != nil {
 		return err
 	}
+
 	return one.Struct(pointer)
 }
 

@@ -70,7 +70,9 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	switch dbType {
 	case "mariadb":
 		tableFieldsSql = fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table)
+
 	default:
+
 		tableFieldsSql = fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table))
 	}
 

@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
@@ -67,7 +68,7 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 		return nil
 	}
 	// It redirects to its underlying value if it has implemented interface iVal.
-	if v, ok := value.(iVal); ok {
+	if v, ok := value.(localinterface.IVal); ok {
 		value = v.Val()
 	}
 	var (
@@ -333,7 +334,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 	case reflect.Struct:
 		var dataMap = make(map[string]interface{})
 		// Map converting interface check.
-		if v, ok := in.Value.(iMapStrAny); ok {
+		if v, ok := in.Value.(localinterface.IMapStrAny); ok {
 			// Value copy, in case of concurrent safety.
 			for mapK, mapV := range v.MapStrAny() {
 				if in.RecursiveOption {

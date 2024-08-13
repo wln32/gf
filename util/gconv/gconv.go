@@ -36,8 +36,8 @@ var (
 		"false": {},
 	}
 
-	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note that, the `gconv/param` tags are used by old version of package.
+	// StructTagPriority defines the default priority priorityTagAndFieldName for Map*/Struct* functions.
+	// Note that, the `gconv/param` priorityTagAndFieldName are used by old version of package.
 	// It is strongly recommended using short tag `c/p` instead in the future.
 	StructTagPriority = gtag.StructTagPriority
 )

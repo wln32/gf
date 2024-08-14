@@ -32,13 +32,20 @@ type CommonConverter struct {
 var (
 	// map[reflect.Type]*CachedStructInfo
 	cachedStructsInfoMap = sync.Map{}
+
+	// localCommonConverter holds some converting functions of common types for internal usage.
+	localCommonConverter CommonConverter
 )
+
+// RegisterCommonConverter registers the CommonConverter for local usage.
+func RegisterCommonConverter(commonConverter CommonConverter) {
+	localCommonConverter = commonConverter
+}
 
 // GetCachedStructInfo retrieves or parses and returns a cached info for certain struct type.
 func GetCachedStructInfo(
 	structType reflect.Type,
 	priorityTag string,
-	converter CommonConverter,
 ) *CachedStructInfo {
 	if structType.Kind() != reflect.Struct {
 		return nil
@@ -48,10 +55,10 @@ func GetCachedStructInfo(
 	if ok {
 		return structInfo
 	}
+
 	// it parses and generates a cache info for given struct type.
 	structInfo = &CachedStructInfo{
 		tagOrFiledNameToFieldInfoMap: make(map[string]*CachedFieldInfo),
-		commonConverter:              converter,
 	}
 	var (
 		priorityTagArray []string

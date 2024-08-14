@@ -35,10 +35,11 @@ var (
 	implUnmarshalValue = reflect.TypeOf((*localinterface.IUnmarshalValue)(nil)).Elem()
 )
 
-func checkTypeIsImplCommonInterface(field reflect.StructField) bool {
+func checkTypeIsCommonInterface(field reflect.StructField) bool {
 	isCommonInterface := false
 	switch field.Type.String() {
 	case "time.Time", "*time.Time":
+		// default convert.
 
 	case "gtime.Time", "*gtime.Time":
 		// default convert.
@@ -51,8 +52,10 @@ func checkTypeIsImplCommonInterface(field reflect.StructField) bool {
 		switch {
 		case field.Type.Implements(implUnmarshalText):
 			isCommonInterface = true
+
 		case field.Type.Implements(implUnmarshalJson):
 			isCommonInterface = true
+
 		case field.Type.Implements(implUnmarshalValue):
 			isCommonInterface = true
 		}

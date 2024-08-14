@@ -6,7 +6,7 @@
 
 // Package gconv implements powerful and convenient converting functionality for any types of variables.
 //
-// This package should keep much less dependencies with other packages.
+// This package should keep much fewer dependencies with other packages.
 package gconv
 
 import (
@@ -36,9 +36,11 @@ var (
 		"off":   {},
 		"false": {},
 	}
+)
 
-	// converting functions for package struct cache feature.
-	commonConverterForStructCache = structcache.CommonConverter{
+func init() {
+	// register common converters for internal usage.
+	structcache.RegisterCommonConverter(structcache.CommonConverter{
 		Int64:   Int64,
 		Uint64:  Uint64,
 		String:  String,
@@ -48,8 +50,8 @@ var (
 		GTime:   GTime,
 		Bytes:   Bytes,
 		Bool:    Bool,
-	}
-)
+	})
+}
 
 // Byte converts `any` to byte.
 func Byte(any interface{}) byte {

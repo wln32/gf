@@ -17,20 +17,17 @@ import (
 
 // CachedStructInfo holds the cached info for certain struct.
 type CachedStructInfo struct {
-	// This map field is mainly used in the [bindStructWithLoopParamsMap] method
+	// This map field is mainly used in the bindStructWithLoopParamsMap method
 	// key = field's name
 	// Will save all field names and PriorityTagAndFieldName
 	// for example：
 	//	field string `json:"name"`
-	// It will be stored twice
-	// 属性名称/标签名称到缓存Field对象信息的映射。
+	//
+	// It will be stored twice, which keys are `name` and `field`.
 	tagOrFiledNameToFieldInfoMap map[string]*CachedFieldInfo
 
 	// All sub attributes field info slice.
 	FieldConvertInfos []*CachedFieldInfo
-
-	// commonConverter holds the common type converting functions.
-	commonConverter CommonConverter
 }
 
 func (csi *CachedStructInfo) HasNoFields() bool {
@@ -47,16 +44,16 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 		priorityTagAndFieldName := csi.genPriorityTagAndFieldName(field, priorityTags)
 		for _, tagOrFieldName := range priorityTagAndFieldName {
 			newFieldInfo := &CachedFieldInfo{
-				IsCommonInterface:       checkTypeIsImplCommonInterface(field),
+				IsCommonInterface:       checkTypeIsCommonInterface(field),
 				StructField:             field,
 				FieldIndexes:            fieldIndexes,
 				ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
-				IsCustomConvert:         csi.checkTypeMaybeIsCustomConvert(field.Type), // TODO merged to ConvertFunc?
+				IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type), // TODO merged to ConvertFunc?
 				PriorityTagAndFieldName: priorityTagAndFieldName,
 				IsField:                 tagOrFieldName == field.Name,
 				RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
 			}
-			newFieldInfo.LastFuzzKey.Store(field.Name)
+			newFieldInfo.LastFuzzyKey.Store(field.Name)
 			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
 			if newFieldInfo.IsField {
 				// TODO 为什么只有isField才添加到fieldConvertInfos
@@ -86,31 +83,31 @@ func (csi *CachedStructInfo) genFieldConvertFunc(fieldType string) (convertFunc 
 	switch fieldType {
 	case "int", "int8", "int16", "int32", "int64":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetInt(csi.commonConverter.Int64(from))
+			to.SetInt(localCommonConverter.Int64(from))
 		}
 	case "uint", "uint8", "uint16", "uint32", "uint64":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetUint(csi.commonConverter.Uint64(from))
+			to.SetUint(localCommonConverter.Uint64(from))
 		}
 	case "string":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetString(csi.commonConverter.String(from))
+			to.SetString(localCommonConverter.String(from))
 		}
 	case "float32":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetFloat(float64(csi.commonConverter.Float32(from)))
+			to.SetFloat(float64(localCommonConverter.Float32(from)))
 		}
 	case "float64":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetFloat(csi.commonConverter.Float64(from))
+			to.SetFloat(localCommonConverter.Float64(from))
 		}
 	case "Time", "time.Time":
 		convertFunc = func(from any, to reflect.Value) {
-			*to.Addr().Interface().(*time.Time) = csi.commonConverter.Time(from)
+			*to.Addr().Interface().(*time.Time) = localCommonConverter.Time(from)
 		}
 	case "GTime", "gtime.Time":
 		convertFunc = func(from any, to reflect.Value) {
-			v := csi.commonConverter.GTime(from)
+			v := localCommonConverter.GTime(from)
 			if v == nil {
 				v = gtime.New()
 			}
@@ -118,11 +115,11 @@ func (csi *CachedStructInfo) genFieldConvertFunc(fieldType string) (convertFunc 
 		}
 	case "bool":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetBool(csi.commonConverter.Bool(from))
+			to.SetBool(localCommonConverter.Bool(from))
 		}
 	case "[]byte":
 		convertFunc = func(from any, to reflect.Value) {
-			to.SetBytes(csi.commonConverter.Bytes(from))
+			to.SetBytes(localCommonConverter.Bytes(from))
 		}
 	default:
 		return nil
@@ -154,7 +151,7 @@ func (csi *CachedStructInfo) genPriorityTagAndFieldName(
 	return
 }
 
-func (csi *CachedStructInfo) checkTypeMaybeIsCustomConvert(fieldType reflect.Type) bool {
+func (csi *CachedStructInfo) checkTypeHasCustomConvert(fieldType reflect.Type) bool {
 	if fieldType.Kind() == reflect.Ptr {
 		fieldType = fieldType.Elem()
 	}

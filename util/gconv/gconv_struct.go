@@ -167,9 +167,9 @@ func doStruct(
 	if len(paramsMap) == 0 {
 		return nil
 	}
-	// parse struct.
+	// Get struct info from cache or parse struct and cache the struct info.
 	cachedStructInfo := structcache.GetCachedStructInfo(
-		pointerElemReflectValue.Type(), priorityTag, commonConverterForStructCache,
+		pointerElemReflectValue.Type(), priorityTag,
 	)
 	// Nothing to be converted.
 	if cachedStructInfo == nil {
@@ -233,6 +233,7 @@ func setOtherSameNameField(
 	structValue reflect.Value,
 	paramKeyToAttrMap map[string]string,
 ) (err error) {
+	// loop the same field name of all sub attributes.
 	for i := range fieldInfo.OtherSameNameFieldIndex {
 		fieldValue := fieldInfo.GetOtherFieldReflectValue(structValue, i)
 		if err = bindVarToStructField(fieldValue, srcValue, fieldInfo, paramKeyToAttrMap); err != nil {
@@ -287,13 +288,13 @@ func bindStructWithLoopParamsMap(
 			continue
 		}
 
-		// fuzz.
+		// fuzzy matching.
 		for _, fieldInfo = range cachedStructInfo.FieldConvertInfos {
 			fieldName = fieldInfo.FieldName()
 			if _, ok = usedParamsKeyOrTagNameMap[fieldName]; ok {
 				continue
 			}
-			fuzzLastKey = fieldInfo.LastFuzzKey.Load().(string)
+			fuzzLastKey = fieldInfo.LastFuzzyKey.Load().(string)
 			paramValue, ok = paramsMap[fuzzLastKey]
 			if !ok {
 				if strings.EqualFold(
@@ -301,7 +302,7 @@ func bindStructWithLoopParamsMap(
 				) {
 					paramValue, ok = paramsMap[paramKey]
 					// If it is found this time, update it based on what was not found last time.
-					fieldInfo.LastFuzzKey.Store(paramKey)
+					fieldInfo.LastFuzzyKey.Store(paramKey)
 				}
 			}
 			if ok {
@@ -377,13 +378,13 @@ func bindStructWithLoopFieldInfos(
 			continue
 		}
 
-		fuzzLastKey = fieldInfo.LastFuzzKey.Load().(string)
+		fuzzLastKey = fieldInfo.LastFuzzyKey.Load().(string)
 		if paramValue, ok = paramsMap[fuzzLastKey]; !ok {
 			paramKey, paramValue = fuzzyMatchingFieldName(
 				fieldInfo.RemoveSymbolsFieldName, paramsMap, usedParamsKeyOrTagNameMap,
 			)
 			ok = paramKey != ""
-			fieldInfo.LastFuzzKey.Store(paramKey)
+			fieldInfo.LastFuzzyKey.Store(paramKey)
 		}
 		if ok {
 			fieldValue = fieldInfo.GetFieldReflectValue(structValue)

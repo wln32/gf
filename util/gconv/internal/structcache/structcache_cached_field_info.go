@@ -13,27 +13,29 @@ import (
 
 // CachedFieldInfo holds the cached info for struct field.
 type CachedFieldInfo struct {
-	// 字段的索引，可能是匿名嵌套的结构体，所以是[]int
+	// FieldIndexes holds the global index number from struct info.
+	// The field may belong to an embedded structure, so it is defined here as []int.
 	FieldIndexes []int
 
-	// 字段的tag(可能是conv,param,p,c,json之类的),
-	// PriorityTagAndFieldName 包含字段的名字，该字段在数组最后一项。
+	// PriorityTagAndFieldName holds the tag value(conv, param, p, c, json) and the field name.
+	// PriorityTagAndFieldName contains the field name, which is the last item of slice.
 	PriorityTagAndFieldName []string
 
-	// 1.iUnmarshalValue
-	// 2.iUnmarshalText
-	// 3.iUnmarshalJSON
-	// 实现了以上3种接口的类型。
-	// 目的：减少对每一个转换对象时，通过接口类型的运行时判断开销。
+	// IsCommonInterface marks this field implements common interfaces as:
+	// - iUnmarshalValue
+	// - iUnmarshalText
+	// - iUnmarshalJSON
+	// Purpose: reduce the interface asserting cost in runtime.
 	IsCommonInterface bool
 
-	// 注册自定义转换的时候，比如func(src *int)(dest *string,err error)
-	// 当结构体字段类型为string的时候，IsCustomConvert 字段会为true
-	// 表示此次转换有可能会是自定义转换，具体还需要进一步确定
+	// IsCustomConvert marks there custom converting function for this field type.
 	IsCustomConvert bool
 
+	// StructField is the type info of this field.
 	StructField reflect.StructField
 
+	// OtherSameNameFieldIndex holds the sub attributes of the same field name.
+	// For example:
 	// type Name struct{
 	//     LastName  string
 	//     FirstName string
@@ -43,39 +45,37 @@ type CachedFieldInfo struct {
 	//     LastName  string
 	//     FirstName string
 	// }
-	// 当结构体可能是类似于User结构体这种情况时
-	// 只会存储两个字段LastName, FirstName使用不同的索引来代表不同的字段
-	// 对于 LastName 字段来说
-	// fieldIndex      = []int{0,1}
-	// OtherSameNameFieldIndex = [][]int{[]int{1}}长度只有1，因为只有一个重复的,且索引为1
-	// 在赋值时会对这两个索引{0,1}和{1}都赋同样的值
-	// 目前对于重复的字段可以做以下3种可能
-	// 1.只设置第一个，后面重名的不设置
-	// 2.只设置最后一个
-	// 3.全部设置 (目前的做法)
+	//
+	// As the `LastName` in `User`, its internal attributes:
+	//   FieldIndexes = []int{0,1}
+	//   // item length 1, as there's only one repeat item with the same field name.
+	//   OtherSameNameFieldIndex = [][]int{[]int{1}}
+	//
+	// In value assignment, the value will be assigned to index {0,1} and {1}.
 	OtherSameNameFieldIndex [][]int
 
-	// 直接缓存字段的转换函数,对于简单的类型来说,相当于直接调用gconv.Int
+	// ConvertFunc is the converting function for this field.
 	ConvertFunc func(from any, to reflect.Value)
 
-	// 表示上次模糊匹配到的字段名字，可以缓存下来。
-	// 如果用户没有设置tag之类的条件,
-	// 而且字段名都匹配不上map的key时，缓存这个非常有用，可以省掉模糊匹配的开销。
-	// TODO 如果不同的paramsMap含有不同格式的paramKey并且都命中同一个fieldName时，该缓存数值可能会不断更新。
-	// lastFuzzKey string
-	LastFuzzKey atomic.Value
+	// The last fuzzy matching key for this field.
+	// The fuzzy matching occurs only if there are no direct tag and field name matching in the params map.
+	// TODO If different paramsMaps contain paramKeys in different formats and all hit the same fieldName,
+	//      the cached value may be continuously updated.
+	// LastFuzzyKey string.
+	LastFuzzyKey atomic.Value
 
-	// 这个字段主要用在 bindStructWithLoopParamsMap 方法中，
-	// 当map中同时存在一个字段的`fieldName`和`tag`时需要用到这个字段。
-	// 例如为以下情况时:
+	// This field is mainly used in the bindStructWithLoopParamsMap method.
+	// This field is needed when both `fieldName` and `tag` of a field exist in the map.
+	// For example:
 	// field string `json:"name"`
 	// map = {
-	//	  "field" : "f1",
-	//	  "name"  : "n1",
+	//     "field" : "f1",
+	//     "name" : "n1",
 	// }
-	// 这里应该以`name`为准,
-	// 在 bindStructWithLoopParamsMap 方法中，由于`map`的无序性，可能会导致先遍历到`field`，
-	// 这个字段更多的是表示优先级，即`name`的优先级比`field`的优先级高，即便之前已经设置过了。
+	// The `name` should be used here.
+	// In the bindStructWithLoopParamsMap method, due to the disorder of `map`, `field` may be traversed first.
+	// This field is more about priority, that is, the priority of `name` is higher than that of `field`,
+	// even if it has been set before.
 	IsField bool
 
 	// removeSymbolsFieldName is used for quick fuzzy match for parameter key.

@@ -15,6 +15,14 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var (
+	uintTestValue   = uint(123)
+	uint8TestValue  = uint8(123)
+	uint16TestValue = uint16(123)
+	uint32TestValue = uint32(123)
+	uint64TestValue = uint64(123)
+)
+
 var uintTests = []struct {
 	value    interface{}
 	expect   uint
@@ -78,6 +86,24 @@ var uintTests = []struct {
 
 	{gvar.New(123), 123, 123, 123, 123, 123},
 	{gvar.New(123.456), 123, 123, 123, 123, 123},
+
+	{&uintTestValue, 123, 123, 123, 123, 123},
+	{&uint8TestValue, 123, 123, 123, 123, 123},
+	{&uint16TestValue, 123, 123, 123, 123, 123},
+	{&uint32TestValue, 123, 123, 123, 123, 123},
+	{&uint64TestValue, 123, 123, 123, 123, 123},
+
+	{(myUint)(uintTestValue), 123, 123, 123, 123, 123},
+	{(myUint8)(uint8TestValue), 123, 123, 123, 123, 123},
+	{(myUint16)(uint16TestValue), 123, 123, 123, 123, 123},
+	{(myUint32)(uint32TestValue), 123, 123, 123, 123, 123},
+	{(myUint64)(uint64TestValue), 123, 123, 123, 123, 123},
+
+	{(*myUint)(&uintTestValue), 123, 123, 123, 123, 123},
+	{(*myUint8)(&uint8TestValue), 123, 123, 123, 123, 123},
+	{(*myUint16)(&uint16TestValue), 123, 123, 123, 123, 123},
+	{(*myUint32)(&uint32TestValue), 123, 123, 123, 123, 123},
+	{(*myUint64)(&uint64TestValue), 123, 123, 123, 123, 123},
 }
 
 func TestUint(t *testing.T) {

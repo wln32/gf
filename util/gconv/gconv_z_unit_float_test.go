@@ -16,12 +16,19 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var (
+	// WARN: When the type is float32 or a new type defined based on float32,
+	//		switching to float64 may result in a few extra decimal places
+	float32TestValue = float32(123)
+	float64TestValue = float64(123.456)
+)
+
 var floatTests = []struct {
 	value    interface{}
 	expect32 float32
 	expect64 float64
 }{
-	{true, 0, 0},
+	{true, 1, 1},
 	{false, 0, 0},
 
 	{int(0), 0, 0},
@@ -73,6 +80,15 @@ var floatTests = []struct {
 
 	{gvar.New(123), 123, 123},
 	{gvar.New(123.456), 123.456, 123.456},
+
+	{&float32TestValue, 123, 123},
+	{&float64TestValue, 123.456, 123.456},
+
+	{myFloat32(123), 123, 123},
+	{myFloat64(123.456), 123.456, 123.456},
+
+	{(*myFloat32)(&float32TestValue), 123, 123},
+	{(*myFloat64)(&float64TestValue), 123.456, 123.456},
 }
 
 func TestFloat32(t *testing.T) {
@@ -85,7 +101,8 @@ func TestFloat32(t *testing.T) {
 
 func TestFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for _, test := range floatTests {
+		for i, test := range floatTests {
+			t.Log(i)
 			t.AssertEQ(gconv.Float64(test.value), test.expect64)
 		}
 	})

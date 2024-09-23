@@ -80,7 +80,7 @@ func doStruct(
 		paramsInterface         interface{} // DO NOT use `params` directly as it might be type `reflect.Value`
 		pointerReflectValue     reflect.Value
 		pointerReflectKind      reflect.Kind
-		pointerElemReflectValue reflect.Value // The reflection value to pointer of struct.
+		pointerElemReflectValue reflect.Value // The reflection value to struct element.
 	)
 	if v, ok := params.(reflect.Value); ok {
 		paramsReflectValue = v

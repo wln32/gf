@@ -115,9 +115,7 @@ func parseStruct(
 		if !utils.IsLetterUpper(fieldName[0]) {
 			continue
 		}
-		if fieldType.String() == "gmeta.Meta" {
-			continue
-		}
+
 		copyFieldIndexes := make([]int, len(fieldIndexes))
 		copy(copyFieldIndexes, fieldIndexes)
 
